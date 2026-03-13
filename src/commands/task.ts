@@ -1,10 +1,11 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
-import { requireConfig } from '../config.js';
+import { requireConfig, getMemberNames } from '../config.js';
 import { BitableClient } from '../bitable/client.js';
 import { TaskOperations } from '../bitable/operations.js';
 import * as ui from '../ui.js';
 import type {
+  AgentTeamConfig,
   TaskListOptions,
   TaskPriority,
   TaskStatus,
@@ -25,11 +26,25 @@ function resolveProfile(flagValue: string | undefined): string {
   return flagValue === 'default' ? '' : flagValue;
 }
 
-function buildBitableClient(flagProfile: string | undefined) {
+function buildBitableClient(flagProfile: string | undefined, config?: AgentTeamConfig) {
   const profile = resolveProfile(flagProfile);
-  const config = requireConfig(profile);
-  const client = new BitableClient(config.feishuAppId, config.feishuAppSecret, config.bitable);
+  const c = config ?? requireConfig(profile);
+  const client = new BitableClient(c.feishuAppId, c.feishuAppSecret, c.bitable);
   return new TaskOperations(client);
+}
+
+/** 校验负责人必须在配置的成员名称中；否则抛出包含当前成员列表的 Error。 */
+function validateAssignee(assignee: string, memberNames: string[], label: string): void {
+  const trimmed = assignee.trim();
+  if (!trimmed) return;
+  if (memberNames.length === 0) {
+    throw new Error('无法校验负责人：当前配置中无成员列表，请先运行 openclaw-team init');
+  }
+  if (!memberNames.includes(trimmed)) {
+    throw new Error(
+      `${label}必须是配置的成员名称。当前配置的成员有：${memberNames.join('、')}；收到：${trimmed}`
+    );
+  }
 }
 
 function formatTable(records: any[]): void {
@@ -115,14 +130,18 @@ export function registerTaskCommand(program: Command): void {
     .requiredOption('--title <text>', '任务描述（简要概述）')
     .requiredOption('--detail <text>', '任务详情（执行要求、验收标准）')
     .requiredOption('--project <project>', '项目名称')
-    .requiredOption('--assignee <name>', '执行人（Agent 角色名）')
+    .requiredOption('--assignee <name>', '执行人（Agent 角色名，须为配置的成员名称）')
     .option('--type <type>', '任务类型 (需求/缺陷/优化/文档/其他)', '需求')
     .option('--priority <priority>', '优先级 P0/P1/P2/P3', 'P2')
     .option('--stage <stage>', '任务阶段', '需求分析')
     .action(async (opts, cmd) => {
       try {
         const { profile } = cmd.optsWithGlobals() as { profile?: string };
-        const ops = buildBitableClient(profile);
+        const p = resolveProfile(profile);
+        const config = requireConfig(p);
+        const memberNames = getMemberNames(config);
+        validateAssignee(opts.assignee, memberNames, '任务负责人');
+        const ops = buildBitableClient(profile, config);
         const recordId = await ops.create({
           title: opts.title,
           detail: opts.detail,
@@ -146,13 +165,19 @@ export function registerTaskCommand(program: Command): void {
     .description('更新任务进展；状态变为「已完成」时须同时传 --summary')
     .option('--status <status>', '变更状态 (待开始/进行中/已暂停/已完成)')
     .option('--progress <text>', '更新最新进展记录')
-    .option('--assignee <name>', '变更执行人')
+    .option('--assignee <name>', '变更执行人（须为配置的成员名称）')
     .option('--priority <priority>', '变更优先级')
     .option('--summary <text>', '任务情况总结（状态变为完成时必填）')
     .action(async (recordId: string, opts, cmd) => {
       try {
         const { profile } = cmd.optsWithGlobals() as { profile?: string };
-        const ops = buildBitableClient(profile);
+        const p = resolveProfile(profile);
+        const config = requireConfig(p);
+        if (opts.assignee != null) {
+          const memberNames = getMemberNames(config);
+          validateAssignee(opts.assignee, memberNames, '任务负责人');
+        }
+        const ops = buildBitableClient(profile, config);
         await ops.update(recordId, {
           status: opts.status as TaskStatus | undefined,
           progress: opts.progress,
@@ -188,13 +213,17 @@ export function registerTaskCommand(program: Command): void {
   task
     .command('flow <record_id>')
     .description('流转任务到下一阶段（主 Agent 使用）')
-    .requiredOption('--next-assignee <name>', '下一阶段执行人')
+    .requiredOption('--next-assignee <name>', '下一阶段执行人（须为配置的成员名称）')
     .option('--stage <stage>', '目标阶段（不填则按流水线自动推进）')
     .option('--note <text>', '给下一执行人的补充说明')
     .action(async (recordId: string, opts, cmd) => {
       try {
         const { profile } = cmd.optsWithGlobals() as { profile?: string };
-        const ops = buildBitableClient(profile);
+        const p = resolveProfile(profile);
+        const config = requireConfig(p);
+        const memberNames = getMemberNames(config);
+        validateAssignee(opts.nextAssignee, memberNames, '下一阶段执行人');
+        const ops = buildBitableClient(profile, config);
         await ops.flow(recordId, {
           nextAssignee: opts.nextAssignee,
           stage: opts.stage as TaskStage | undefined,

@@ -46,6 +46,15 @@ export function requireConfig(profile: string): AgentTeamConfig {
 }
 
 /**
+ * 从团队配置中获取允许作为任务负责人的成员名称列表（agents 中各 entry 的 role）。
+ * 用于 CLI 校验 task create/update/flow 的 assignee/next-assignee 必须在其中。
+ */
+export function getMemberNames(config: AgentTeamConfig): string[] {
+  if (!config.agents || typeof config.agents !== 'object') return [];
+  return Array.from(new Set(Object.values(config.agents).map((e) => e.role).filter(Boolean)));
+}
+
+/**
  * 生成 openclaw CLI 的 --profile flag 片段。
  * profile 为空字符串时不追加 flag（使用 openclaw 默认目录）。
  */
