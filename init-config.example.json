@@ -1,0 +1,39 @@
+{
+    "template": "standard-dev",
+    "feishuGroupId": "oc_fea4402a14c67ca1902e28efd57e899f",
+    "credentials": {
+        "pm": {
+            "appId": "cli_a938c2a066bb9bef",
+            "appSecret": "jyfw0uWaD9C1TYjmTlmo8bQZTK6QEWjx",
+            "name": "大虾"
+        },
+        "product": {
+            "appId": "cli_a938c38de2f9dbc3",
+            "appSecret": "yolzppll13CJB1frA3HxRhWdnL4eDFLw",
+            "name": "小美"
+        },
+        "qa": {
+            "appId": "cli_a9383e45cdb99bcd",
+            "appSecret": "cMU0kJr9AMxaK2p1hog5Gdq1jcS7qDtd",
+            "name": "小帅"
+        },
+        "be": {
+            "appId": "cli_a923b7cf66389bc7",
+            "appSecret": "u38AR1zeYd2G5fUmhEBOScXcjylpnSWk",
+            "name": "Alpha"
+        },
+        "fe": {
+            "appId": "cli_a923b0053bb89bd6",
+            "appSecret": "PwxNlLCefSSVTIhS8v7Wzb36ZapibpP5",
+            "name": "Beta"
+        },
+        "ops": {
+            "appId": "cli_a9239cdf1efa9bc6",
+            "appSecret": "qccXp3sjuRylWxPxGGWL4egflbAlX54B",
+            "name": "Ops"
+        }
+    },
+    "bitable": "https://my.feishu.cn/base/DrtzbHCjJacw1GsC3fec3t4hnUh",
+    "interval": "15m",
+    "force": false
+}

@@ -1,0 +1,6 @@
+{
+  "id": "content-ops",
+  "label": "内容运营团队",
+  "description": "主 Agent + 3 个工作 Agent（产品、文案、运营）",
+  "roleIds": ["pm", "product", "copy", "operation"]
+}

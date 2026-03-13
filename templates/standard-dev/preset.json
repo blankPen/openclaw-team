@@ -1,0 +1,6 @@
+{
+  "id": "standard-dev",
+  "label": "标准研发团队",
+  "description": "主 Agent + 5 个工作 Agent（产品、前端、后端、测试、发布）",
+  "roleIds": ["pm", "product", "fe", "be", "qa", "ops"]
+}
